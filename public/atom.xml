@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>DrinkCode</title>
+  
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://yoursite.com/"/>
+  <updated>2017-04-16T03:06:10.000Z</updated>
+  <id>http://yoursite.com/</id>
+  
+  <author>
+    <name>drinktee</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>docker启动容器后，daemon crash问题，An error occurred trying to connect</title>
+    <link href="http://yoursite.com/2017/04/16/docker-run%E5%90%AF%E5%8A%A8daemon-crash%E9%97%AE%E9%A2%98%EF%BC%8CAn-error-occurred-trying-to-connect/"/>
+    <id>http://yoursite.com/2017/04/16/docker-run启动daemon-crash问题，An-error-occurred-trying-to-connect/</id>
+    <published>2017-04-16T02:44:54.000Z</published>
+    <updated>2017-04-16T03:06:10.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>最近运行docker run 命令后出现了，容器无法启动的情况，出现了以下信息。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ docker run -d  registry.baidu.com/public/nginx_1-8-0:1.0.1</div><div class="line">33d0ea46c4015f5ec6dee16475b0e66b3077cca6214c6d797c5967bbe2279307</div><div class="line"></div><div class="line">An error occurred trying to connect: Post http:///var/run/docker.sock/v1.21/containers/33d0ea46c4015f5ec6dee16475b0e66b3077cca6214c6d797c5967bbe2279307/start: EOF</div></pre></td></tr></table></figure>
+<p>查看日志后发现panic,docker进程挂了。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">runtime: goroutine stack exceeds 1000000000-byte limit</div><div class="line">fatal error: stack overflow</div><div class="line"></div><div class="line">runtime stack:</div><div class="line">runtime.throw(0x1d967b9)</div><div class="line">        /usr/local/go/src/runtime/panic.go:491 +0xad</div><div class="line">runtime.newstack()</div><div class="line">        /usr/local/go/src/runtime/stack.c:784 +0x555</div><div class="line">runtime.morestack()</div><div class="line">        /usr/local/go/src/runtime/asm_amd64.s:324 +0x7e</div><div class="line">goroutine 67 [stack growth]:</div><div class="line">path/filepath.(*lazybuf).append(0xc228c102a8, 0x2f)</div><div class="line">        /usr/local/go/src/path/filepath/path.go:35 fp=0xc228c101f0 sp=0xc228c101e8</div><div class="line">path/filepath.Clean(0xc208869e60, 0x1, 0x0, 0x0)</div><div class="line">        /usr/local/go/src/path/filepath/path.go:103 +0x1e4 fp=0xc228c102f8 sp=0xc228c101f0</div><div class="line">path/filepath.Dir(0xc208869e60, 0x1, 0x0, 0x0)</div><div class="line">        /usr/local/go/src/path/filepath/path.go:454 +0xdd fp=0xc228c10360 sp=0xc228c102f8</div><div class="line">github.com/opencontainers/runc/libcontainer/cgroups/fs.(*CpusetGroup).ensureParent(0x1dbd8c0, 0xc208869e60, 0x1, 0xc2088b128d, 0x8, 0x0, 0x0)</div><div class="line">        /go/src/github.com/docker/docker/vendor/src/github.com/opencontainers/runc/libcontainer/cgroups/fs/cpuset.go:91 +0x50 fp=0xc228c103e0 sp=0xc228c10360</div><div class="line">goroutine 10 [chan receive, 1 minutes]:</div><div class="line">github.com/docker/docker/api/server.(*Server).ServeAPI(0xc208037980, 0x0, 0x0)</div><div class="line">        /go/src/github.com/docker/docker/api/server/server.go:94 +0x1b6</div><div class="line">main.func·007()</div><div class="line">        /go/src/github.com/docker/docker/docker/daemon.go:255 +0x3b</div><div class="line">created by main.(*DaemonCli).CmdDaemon</div><div class="line">        /go/src/github.com/docker/docker/docker/daemon.go:261 +0x1571</div></pre></td></tr></table></figure></p>
+<p>google之后，发现这个<a href="https://github.com/docker/docker/issues/18048" target="_blank" rel="external">ISSUE</a> 有点类似，bschiffthaler将内核升级到<code>3.13.0-70</code>之后，修复了此问题。</p>
+<blockquote>
+<p>@tiborvass Seems it was an issue with the kernel. The error persisted through a reboot, but upgrading the kernel to 3.13.0-70 fixed the issue. We have other machines with kernels older than 3.13.0-34 and docker runs just fine, I would chuck it up to a systems “hiccup”.<br>I’ll be closing the issue with this.</p>
+</blockquote>
+<p>此问题也可能与机器有关，相同内核的不同机器，也会出现此问题。<br>按照ISSUE中所说，在1.10以上版本已经修复此问题。</p>
+<blockquote>
+<p>@sanwan the error discussed here was in docker 1.10 and older, and was resolved; if you’re running the current version of docker, please open a new issue with more details (as requested in the bug report template), or search if there’s an existing open issue.</p>
+</blockquote>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;最近运行docker run 命令后出现了，容器无法启动的情况，出现了以下信息。&lt;/p&gt;
+&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;div class=&quot;line&quot;&gt;1&lt;/div&gt;
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>今天开始写博客</title>
+    <link href="http://yoursite.com/2017/04/15/%E4%BB%8A%E5%A4%A9%E5%BC%80%E5%A7%8B%E5%86%99%E5%8D%9A%E5%AE%A2/"/>
+    <id>http://yoursite.com/2017/04/15/今天开始写博客/</id>
+    <published>2017-04-15T03:51:55.000Z</published>
+    <updated>2017-04-15T03:53:43.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>今天开始写博客了，希望能写出一些高质量的博客。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;今天开始写博客了，希望能写出一些高质量的博客。&lt;/p&gt;
+
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Hello World</title>
+    <link href="http://yoursite.com/2017/04/14/hello-world/"/>
+    <id>http://yoursite.com/2017/04/14/hello-world/</id>
+    <published>2017-04-14T08:48:32.000Z</published>
+    <updated>2017-04-14T08:48:32.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Welcome to &lt;a href=&quot;https://hexo.io/&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Hexo&lt;/a&gt;! This is your very first post. Check &lt;a href=&quot;https://hexo.
+    
+    </summary>
+    
+    
+  </entry>
+  
+</feed>
