@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>http://yoursite.com/2017/05/20/Kubernetes-1-6-%E9%9B%86%E7%BE%A4%E9%83%A8%E7%BD%B2/</loc>
+    
+    <lastmod>2017-05-20T12:05:45.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2017/04/16/docker-run%E5%90%AF%E5%8A%A8daemon-crash%E9%97%AE%E9%A2%98%EF%BC%8CAn-error-occurred-trying-to-connect/</loc>
+    
+    <lastmod>2017-04-16T03:06:10.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/about/index.html</loc>
+    
+    <lastmod>2017-04-14T10:07:27.000Z</lastmod>
+    
+  </url>
+  
+</urlset>

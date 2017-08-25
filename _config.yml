@@ -63,7 +63,7 @@ pagination_dir: page
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: material-flow
+theme: apollo
 
 feed:
   type: atom
@@ -100,9 +100,9 @@ shareto: true ## If you want to use the share button please set the value to tru
 busuanzi: true ## If you want to use Busuanzi page views please set the value to true.
 widgets_on_small_screens: false ## Set to true to enable widgets on small screens.
 menu:
-  - page: home
-    directory: .
-    icon: fa-home
+  # - page: home
+  #   directory: .
+  #   icon: fa-home
   - page: archive
     directory: archives/
     icon: fa-archive
